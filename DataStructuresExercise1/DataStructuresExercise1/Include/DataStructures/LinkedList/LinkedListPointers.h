@@ -1,5 +1,5 @@
-#ifndef INCLUDE_CONTAINERS_LINKEDLIST_LINKEDLISTPOINTERS__H
-#define INCLUDE_CONTAINERS_LINKEDLIST_LINKEDLISTPOINTERS__H
+#ifndef INCLUDE_DATASTRUCTURES_LINKEDLIST_LINKEDLISTPOINTERS__H
+#define INCLUDE_DATASTRUCTURES_LINKEDLIST_LINKEDLISTPOINTERS__H
 
 #include <utility>
 
@@ -329,4 +329,4 @@ namespace containers
 template<typename ElementType>
 typename containers::LinkedListPointers<ElementType>::LinkedNode containers::LinkedListPointers<ElementType>::dummy(ElementType(), nullptr, nullptr);
 
-#endif // !INCLUDE_CONTAINERS_LINKEDLIST_LINKEDLISTPOINTERS__H
+#endif // !INCLUDE_DATASTRUCTURES_LINKEDLIST_LINKEDLISTPOINTERS__H

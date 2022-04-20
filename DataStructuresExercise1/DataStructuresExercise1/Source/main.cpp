@@ -1,7 +1,7 @@
 
 #include <iostream>
-#include "Containers/Stack.h"
-#include "Containers/LinkedList/LinkedListArray.h"
+#include "DataStructures/Stack.h"
+#include "DataStructures/LinkedList/LinkedListArray.h"
 
 using namespace containers;
 

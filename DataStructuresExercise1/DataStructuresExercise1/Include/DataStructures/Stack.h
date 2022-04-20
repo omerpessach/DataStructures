@@ -1,7 +1,7 @@
-#ifndef INCLUDE_CONTAINERS_STACK__H
-#define INCLUDE_CONTAINERS_STACK__H
+#ifndef INCLUDE_DATASTRUCTURES_STACK__H
+#define INCLUDE_DATASTRUCTURES_STACK__H
 
-#include "Containers/LinkedList/LinkedListPointers.h"
+#include "DataStructures/LinkedList/LinkedListPointers.h"
 
 namespace containers
 {
@@ -55,4 +55,4 @@ namespace containers
 }
 
 
-#endif // !INCLUDE_CONTAINERS_STACK__H
+#endif // !INCLUDE_DATASTRUCTURES_STACK__H
