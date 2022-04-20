@@ -31,6 +31,7 @@ namespace containers
 
 		public:
 			// C'tors
+			LinkedNode(): data(), next(nullptr), previous(nullptr) { }
 			LinkedNode(const LinkedNode&) = default;
 			LinkedNode(LinkedNode&&) = default;
 
@@ -286,6 +287,11 @@ namespace containers
 			delete toDelete;
 			--size;
 
+			if (size == 0)
+			{
+				last = &dummy;
+			}
+
 			return *this;
 		}
 
@@ -293,12 +299,17 @@ namespace containers
 		{
 			if (IsEmpty()) throw REMOVED_ELEMENT_WHEN_EMPTY;
 			LinkedNode* toDelete = last;
-
+			
 			last = last->previous;
 			last->next = &dummy;
 
 			delete toDelete;
 			--size;
+
+			if (size == 0)
+			{
+				first = &dummy;
+			}
 
 			return *this;
 		}
@@ -336,6 +347,6 @@ namespace containers
 }
 
 template<typename ElementType>
-typename containers::LinkedListPointers<ElementType>::LinkedNode containers::LinkedListPointers<ElementType>::dummy(ElementType(), nullptr, nullptr);
+typename containers::LinkedListPointers<ElementType>::LinkedNode containers::LinkedListPointers<ElementType>::dummy;
 
 #endif // !INCLUDE_DATASTRUCTURES_LINKEDLIST_LINKEDLISTPOINTERS__H

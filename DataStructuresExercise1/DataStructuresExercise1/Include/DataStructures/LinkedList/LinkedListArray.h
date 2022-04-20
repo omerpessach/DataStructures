@@ -25,14 +25,15 @@ namespace containers
 			static constexpr auto DECREMENTED_INVALID_ITERATOR = "Can't decrement a dangling iterator!";
 
 			// Members
-			LinkedListArray& container;
+			LinkedListArray* container;
 			unsigned int dataIndex;
 
 			// C'tors
-			LinkedNode(const LinkedListArray& container, unsigned int dataIndex) : container(const_cast<LinkedListArray&>(container)), dataIndex(dataIndex) {}
+			LinkedNode(const LinkedListArray& container, unsigned int dataIndex) : container(const_cast<LinkedListArray*>(&container)), dataIndex(dataIndex) {}
 
 		public:
 			// C'tors
+			LinkedNode() : container(nullptr), dataIndex(NONEXISTENT_ELEMENT) { }
 			LinkedNode(const LinkedNode&) = default;
 			LinkedNode(LinkedNode&&) = default;
 
@@ -44,19 +45,19 @@ namespace containers
 			inline auto& operator*() 
 			{
 				if (dataIndex == NONEXISTENT_ELEMENT) throw DEREFERENCED_INVALID_ITERATOR;
-				return container.elements[dataIndex]; 
+				return container->elements[dataIndex]; 
 			}
 
 			inline const auto& operator*() const 
 			{
 				if (dataIndex == NONEXISTENT_ELEMENT) throw DEREFERENCED_INVALID_ITERATOR;
-				return container.elements[dataIndex]; 
+				return container->elements[dataIndex]; 
 			}
 
 			inline auto& operator++() 
 			{
 				if (dataIndex == NONEXISTENT_ELEMENT) throw INCREMENTED_INVALID_ITERATOR;
-				return dataIndex = container.elementNexts[dataIndex]; 
+				return dataIndex = container->elementNexts[dataIndex]; 
 			}
 
 			auto operator++(int)
@@ -70,7 +71,7 @@ namespace containers
 			inline auto& operator--() 
 			{
 				if (dataIndex == NONEXISTENT_ELEMENT) throw DECREMENTED_INVALID_ITERATOR;
-				return dataIndex = container.elementPrevs[dataIndex]; 
+				return dataIndex = container->elementPrevs[dataIndex]; 
 			}
 
 			auto operator--(int)
@@ -83,7 +84,7 @@ namespace containers
 
 			inline auto operator!=(const LinkedNode& other) const
 			{
-				return &container != &other.container || dataIndex != other.dataIndex;
+				return container != other.container || dataIndex != other.dataIndex;
 			}
 
 			inline auto operator==(const LinkedNode& other) const { return !(*this != other); }
@@ -252,7 +253,16 @@ namespace containers
 			if (IsEmpty()) throw REMOVED_ELEMENT_WHEN_EMPTY;
 			int toDelete = firstIndex;
 			firstIndex = elementNexts[firstIndex];
-			elementPrevs[firstIndex] = NONEXISTENT_ELEMENT;
+
+			if (size == 1)
+			{
+				lastIndex = NONEXISTENT_ELEMENT;
+			}
+			else
+			{
+				elementPrevs[firstIndex] = NONEXISTENT_ELEMENT;
+			}
+
 			DeleteIndex(toDelete);
 
 			return *this;
@@ -263,7 +273,16 @@ namespace containers
 			if (IsEmpty()) throw REMOVED_ELEMENT_WHEN_EMPTY;
 			int toDelete = lastIndex;
 			lastIndex = elementPrevs[lastIndex];
-			elementNexts[lastIndex] = NONEXISTENT_ELEMENT;
+
+			if (size == 1)
+			{
+				firstIndex = NONEXISTENT_ELEMENT;
+			}
+			else
+			{
+				elementNexts[lastIndex] = NONEXISTENT_ELEMENT;
+			}
+
 			DeleteIndex(toDelete);
 
 			return *this;
