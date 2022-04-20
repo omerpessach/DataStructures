@@ -58,14 +58,21 @@ auto GetCountryFromUser()
 
 namespace recursive
 {
-    auto GetToTown(const vector<LinkedListPointers<unsigned int>>& country,
+    void GetToTown(const vector<LinkedListPointers<unsigned int>>& country,
                    unsigned int townNumber,
                    vector<Color>& coloredTowns,
                    LinkedListArray<unsigned int>& accessibleTowns)
     {
-        // TODO: Pessach
+        coloredTowns[townNumber] = BLACK;
+        accessibleTowns.Append(townNumber);
 
-        return accessibleTowns;
+        for (const auto& neighbor : country[townNumber])
+        {
+            if (coloredTowns[neighbor] == WHITE)
+            {
+                GetToTown(country, neighbor, coloredTowns, accessibleTowns);
+            }
+        }
     }
 };
 
