@@ -39,25 +39,25 @@ namespace containers
 			LinkedNode& operator=(LinkedNode&&) = default;
 
 			// Iterator Methods
-			inline auto& operator*() throw (const char*) 
+			inline auto& operator*()
 			{
 				if (*this == dummy) throw DEREFERENCED_INVALID_ITERATOR;
 				return data; 
 			}
 
-			inline const auto& operator*() const throw (const char*) 
+			inline const auto& operator*() const
 			{
 				if (*this == dummy) throw DEREFERENCED_INVALID_ITERATOR;
 				return data; 
 			}
 
-			inline auto& operator++() throw (const char*) 
+			inline auto& operator++()
 			{
 				if (*this == dummy) throw INCREMENTED_INVALID_ITERATOR;
 				return *this = *next; 
 			}
 
-			auto operator++(int) throw (const char*)
+			auto operator++(int)
 			{
 				LinkedNode before = *this;
 				++(*this);
@@ -65,13 +65,13 @@ namespace containers
 				return before;
 			}
 
-			inline auto& operator--() throw (const char*) 
+			inline auto& operator--()
 			{
 				if (*this == dummy) throw DECREMENTED_INVALID_ITERATOR;
 				return *this = *previous; 
 			}
 
-			auto operator--(int) throw (const char*)
+			auto operator--(int)
 			{
 				LinkedNode before = *this;
 				--(*this);
@@ -89,18 +89,24 @@ namespace containers
 
 		// Constructors
 		LinkedListPointers() : first(&dummy), last(&dummy), size(0) { }
+		LinkedListPointers(const LinkedListPointers& other) : LinkedListPointers() { *this = other; }
+		LinkedListPointers(LinkedListPointers&& other) : LinkedListPointers() { *this = std::move(other); }
 
-		template<typename Container>
-		LinkedListPointers(Container&& other) throw (const char*) : LinkedListPointers() { *this = std::forward<Container>(other); }
+		template<typename BeginIteratorType, typename EndIteratorType>
+		LinkedListPointers(const BeginIteratorType& begin, const EndIteratorType& end) : LinkedListPointers() { Append(begin, end); }
 
 		// Destructor
 		~LinkedListPointers() { Clear(); }
 
 		// Assignment Operator Methods
-		template<typename Container>
-		inline auto& operator=(Container&& other) throw (const char*)
+		inline auto& operator=(LinkedListPointers&& other)
 		{
-			return this != reinterpret_cast<const LinkedListPointers*>(&other) ? Clear().Append(std::forward<Container>(other)) : *this;
+			return this != reinterpret_cast<const LinkedListPointers*>(&other) ? Clear().Append(std::move(other)) : *this;
+		}
+
+		inline auto& operator=(const LinkedListPointers& other)
+		{
+			return this != reinterpret_cast<const LinkedListPointers*>(&other) ? Clear().Append(other) : *this;
 		}
 
 		// Getters
@@ -113,32 +119,32 @@ namespace containers
 			for (const auto& current : *this) if (current == element) return true;
 			return false;
 		}
-		inline auto& First() throw (const char*) 
+		inline auto& First()
 		{
 			if (IsEmpty()) throw GET_ELEMENT_WHEN_EMPTY;
 			return first->data; 
 		}
 
-		inline const auto& First() const throw (const char*) 
+		inline const auto& First() const
 		{
 			if (IsEmpty()) throw GET_ELEMENT_WHEN_EMPTY;
 			return first->data; 
 		}
 
-		inline auto& Last() throw (const char*) 
+		inline auto& Last()
 		{
 			if (IsEmpty()) throw GET_ELEMENT_WHEN_EMPTY;
 			return last->data; 
 		}
 
-		inline const auto& Last() const throw (const char*) 
+		inline const auto& Last() const
 		{
 			if (IsEmpty()) throw GET_ELEMENT_WHEN_EMPTY;
 			return last->data; 
 		}
 
 		// List Manipulation
-		auto& Append(ElementType element) throw (const char*)
+		auto& Append(ElementType element)
 		{
 			if (size == 0)
 			{
@@ -160,20 +166,8 @@ namespace containers
 
 			return *this;
 		}
-
-		template<typename Container>
-		auto& Append(const Container& other) throw (const char*)
-		{
-			for (const auto& otherData : other)
-			{
-				Append(otherData);
-			}
-
-			return *this;
-		}
-
-		template<>
-		auto& Append(const LinkedListPointers& other) throw (const char*)
+		
+		auto& Append(const LinkedListPointers& other)
 		{
 			unsigned int count = 0;
 			unsigned int otherSize = other.size;
@@ -190,8 +184,8 @@ namespace containers
 
 			return *this;
 		}
-		
-		auto& Append(LinkedListPointers&& other) throw (const char*)
+
+		auto& Append(LinkedListPointers&& other)
 		{
 			if (&other == this)
 			{
@@ -217,17 +211,32 @@ namespace containers
 			return *this;
 		}
 
+		template<typename BeginIteratorType, typename EndIteratorType>
+		auto& Append(const BeginIteratorType& begin, const EndIteratorType& end)
+		{
+			while (begin != end)
+			{
+				Append(*(begin++));
+			}
+		}
+
 		template<typename Any>
-		inline auto& Prepend(Any&& other) throw (const char*)
+		inline auto& Prepend(Any&& other)
 		{
 			return *this = LinkedListPointers<ElementType>().Append(std::forward<Any>(other)).Append(std::move(*this));
 		}
 
-		template<typename Container>
-		inline auto& operator+=(Container&& other) throw (const char*) { return Append(std::forward<Container>(other)); }
+		template<typename BeginIteratorType, typename EndIteratorType>
+		auto& Prepend(const BeginIteratorType& begin, const EndIteratorType& end)
+		{
+			return *this = LinkedListPointers<ElementType>().Append(begin, end).Append(*this);
+		}
 
 		template<typename Container>
-		inline auto operator+(Container&& other) throw (const char*) { return LinkedListPointers(*this).Append(std::forward<Container>(other)); }
+		inline auto& operator+=(Container&& other){ return Append(std::forward<Container>(other)); }
+
+		template<typename Container>
+		inline auto operator+(Container&& other){ return LinkedListPointers(*this).Append(std::forward<Container>(other)); }
 
 		auto& Remove(const ElementType& element)
 		{
@@ -266,7 +275,7 @@ namespace containers
 			return *this;
 		}
 		
-		auto& RemoveFirst() throw (const char*)
+		auto& RemoveFirst()
 		{
 			if (IsEmpty()) throw REMOVED_ELEMENT_WHEN_EMPTY;
 			LinkedNode* toDelete = first;
@@ -280,7 +289,7 @@ namespace containers
 			return *this;
 		}
 
-		auto& RemoveLast() throw (const char*)
+		auto& RemoveLast()
 		{
 			if (IsEmpty()) throw REMOVED_ELEMENT_WHEN_EMPTY;
 			LinkedNode* toDelete = last;

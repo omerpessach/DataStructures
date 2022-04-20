@@ -1,9 +1,11 @@
 #ifndef INCLUDE_DATASTRUCTURES_LINKEDLIST_LINKEDLISTARRAY__H
 #define INCLUDE_DATASTRUCTURES_LINKEDLIST_LINKEDLISTARRAY__H
 
+#include <vector>
+
 namespace containers
 {
-	template<typename ElementType, unsigned int ArraySize>
+	template<typename ElementType>
 	class LinkedListArray
 	{
 		// Friend Classes
@@ -23,11 +25,11 @@ namespace containers
 			static constexpr auto DECREMENTED_INVALID_ITERATOR = "Can't decrement a dangling iterator!";
 
 			// Members
-			const LinkedListArray& container;
+			LinkedListArray& container;
 			unsigned int dataIndex;
 
 			// C'tors
-			LinkedNode(const LinkedListArray& container, unsigned int dataIndex) : container(container), dataIndex(dataIndex) {}
+			LinkedNode(const LinkedListArray& container, unsigned int dataIndex) : container(const_cast<LinkedListArray&>(container)), dataIndex(dataIndex) {}
 
 		public:
 			// C'tors
@@ -39,25 +41,25 @@ namespace containers
 			LinkedNode& operator=(LinkedNode&&) = default;
 
 			// Iterator Methods
-			inline auto& operator*() throw (const char*) 
+			inline auto& operator*() 
 			{
 				if (dataIndex == NONEXISTENT_ELEMENT) throw DEREFERENCED_INVALID_ITERATOR;
 				return container.elements[dataIndex]; 
 			}
 
-			inline const auto& operator*() const throw (const char*) 
+			inline const auto& operator*() const 
 			{
 				if (dataIndex == NONEXISTENT_ELEMENT) throw DEREFERENCED_INVALID_ITERATOR;
 				return container.elements[dataIndex]; 
 			}
 
-			inline auto& operator++() throw (const char*) 
+			inline auto& operator++() 
 			{
 				if (dataIndex == NONEXISTENT_ELEMENT) throw INCREMENTED_INVALID_ITERATOR;
 				return dataIndex = container.elementNexts[dataIndex]; 
 			}
 
-			auto operator++(int) throw (const char*)
+			auto operator++(int)
 			{
 				LinkedNode before = *this;
 				++(*this);
@@ -65,13 +67,13 @@ namespace containers
 				return before;
 			}
 
-			inline auto& operator--() throw (const char*) 
+			inline auto& operator--() 
 			{
 				if (dataIndex == NONEXISTENT_ELEMENT) throw DECREMENTED_INVALID_ITERATOR;
 				return dataIndex = container.elementPrevs[dataIndex]; 
 			}
 
-			auto operator--(int) throw (const char*)
+			auto operator--(int)
 			{
 				LinkedNode before = *this;
 				--(*this);
@@ -88,17 +90,19 @@ namespace containers
 		};
 
 		// Constructors
-		LinkedListArray() { Clear(); }
+		LinkedListArray(size_t capacity = 256) : elements(capacity), elementNexts(capacity), elementPrevs(capacity) { Clear(); }
+		LinkedListArray(const LinkedListArray& other) : LinkedListArray(other.Capacity()) { *this = other; }
+		LinkedListArray(LinkedListArray&& other) = default;
 
-		template<typename Container>
-		LinkedListArray(const Container& other) throw (const char*) : LinkedListArray() { *this = other; }
+		template<typename BeginIteratorType, typename EndIteratorType>
+		LinkedListArray(unsigned int capacity, const BeginIteratorType& begin, const EndIteratorType& end) : LinkedListArray(capacity) { Append(begin, end); }
 
 		// Destructor
 		~LinkedListArray() = default;
 
 		// Assignment Operator Methods
-		template<typename Container>
-		inline auto& operator=(const Container& other) throw (const char*)
+		LinkedListArray& operator=(LinkedListArray&& other) = default;
+		inline auto& operator=(const LinkedListArray& other)
 		{
 			return &other != this ? Clear().Append(other) : *this;
 		}
@@ -106,7 +110,7 @@ namespace containers
 		// Getters
 		inline auto Size() const { return size; }
 		inline auto IsEmpty() const { return size == 0; }
-		inline constexpr auto MaxSize() const { return ArraySize; }
+		inline auto Capacity() const { return elements.size(); }
 		inline auto begin() const { return LinkedNode(*this, firstIndex); }
 		inline auto end() const { return LinkedNode(*this, NONEXISTENT_ELEMENT); }
 		inline auto Contains(const ElementType& element) const
@@ -114,34 +118,34 @@ namespace containers
 			for (const auto& current : *this) if (current == element) return true;
 			return false;
 		}
-		inline auto& First() throw (const char*) 
+		inline auto& First() 
 		{
 			if (IsEmpty()) throw GET_ELEMENT_WHEN_EMPTY;
 			return elements[firstIndex]; 
 		}
 
-		inline const auto& First() const throw (const char*) 
+		inline const auto& First() const 
 		{
 			if (IsEmpty()) throw GET_ELEMENT_WHEN_EMPTY;
 			return elements[firstIndex]; 
 		}
 
-		inline auto& Last() throw (const char*) 
+		inline auto& Last() 
 		{
 			if (IsEmpty()) throw GET_ELEMENT_WHEN_EMPTY;
 			return elements[lastIndex]; 
 		}
 
-		inline const auto& Last() const throw (const char*) 
+		inline const auto& Last() const 
 		{
 			if (IsEmpty()) throw GET_ELEMENT_WHEN_EMPTY;
 			return elements[lastIndex];
 		}
 
 		// List Manipulation
-		auto& Append(ElementType element) throw (const char*)
+		auto& Append(ElementType element)
 		{
-			if (size == ArraySize) throw ADD_ELEMENT_WHEN_FULL;
+			if (size == Capacity()) throw ADD_ELEMENT_WHEN_FULL;
 
 			if (size == 0)
 			{
@@ -162,19 +166,7 @@ namespace containers
 			return *this;
 		}
 
-		template<typename Container>
-		auto& Append(const Container& other) throw (const char*)
-		{
-			for (const auto& otherData : other)
-			{
-				Append(otherData);
-			}
-
-			return *this;
-		}
-
-		template<>
-		auto& Append(const LinkedListArray& other) throw (const char*)
+		auto& Append(const LinkedListArray& other)
 		{
 			unsigned int count = 0;
 			unsigned int otherSize = other.size;
@@ -192,17 +184,32 @@ namespace containers
 			return *this;
 		}
 
-		template<typename Any>
-		inline auto& Prepend(Any&& other) throw (const char*)
+		template<typename BeginIteratorType, typename EndIteratorType>
+		auto& Append(const BeginIteratorType& begin, const EndIteratorType& end)
 		{
-			return *this = LinkedListArray<ElementType, ArraySize>().Append(std::forward<Any>(other)).Append(*this);
+			while (begin != end)
+			{
+				Append(*(begin++));
+			}
+		}
+
+		template<typename Any>
+		inline auto& Prepend(Any&& other)
+		{
+			return *this = LinkedListArray<ElementType>(Capacity()).Append(std::forward<Any>(other)).Append(*this);
+		}
+
+		template<typename BeginIteratorType, typename EndIteratorType>
+		auto& Prepend(const BeginIteratorType& begin, const EndIteratorType& end)
+		{
+			return *this = LinkedListArray<ElementType>(Capacity()).Append(begin, end).Append(*this);
 		}
 
 		template<typename Container>
-		inline auto& operator+=(const Container& other) throw (const char*) { return Append(other); }
+		inline auto& operator+=(const Container& other) { return Append(other); }
 
 		template<typename Container>
-		inline auto operator+(const Container& other) throw (const char*) { return LinkedListArray(*this).Append(other); }
+		inline auto operator+(const Container& other) { return LinkedListArray(*this).Append(other); }
 
 		auto& Remove(const ElementType& element)
 		{
@@ -240,7 +247,7 @@ namespace containers
 			return *this;
 		}
 
-		auto& RemoveFirst() throw (const char*)
+		auto& RemoveFirst()
 		{
 			if (IsEmpty()) throw REMOVED_ELEMENT_WHEN_EMPTY;
 			int toDelete = firstIndex;
@@ -251,7 +258,7 @@ namespace containers
 			return *this;
 		}
 
-		auto& RemoveLast() throw (const char*)
+		auto& RemoveLast()
 		{
 			if (IsEmpty()) throw REMOVED_ELEMENT_WHEN_EMPTY;
 			int toDelete = lastIndex;
@@ -269,7 +276,7 @@ namespace containers
 			size = 0;
 			firstIndex = lastIndex = NONEXISTENT_ELEMENT;
 
-			for (unsigned int index = 0; index < ArraySize; index++)
+			for (unsigned int index = 0; index < Capacity(); index++)
 			{
 				elementNexts[index] = index + 1;
 				elementPrevs[index] = NONEXISTENT_ELEMENT;
@@ -288,9 +295,9 @@ namespace containers
 		static constexpr auto NONEXISTENT_ELEMENT = -1;
 
 		// Data Members
-		ElementType elements[ArraySize];
-		int elementNexts[ArraySize];
-		int elementPrevs[ArraySize];
+		std::vector<ElementType> elements;
+		std::vector<int> elementNexts;
+		std::vector<int> elementPrevs;
 		unsigned int size;
 		int firstIndex;
 		int lastIndex;

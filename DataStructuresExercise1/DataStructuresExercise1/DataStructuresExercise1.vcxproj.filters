@@ -18,15 +18,18 @@
     <ClCompile Include="Source\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\example.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Include\Containers\LinkedList\LinkedListPointers.h">
+    <ClInclude Include="Include\DataStructures\LinkedList\LinkedListPointers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Containers\LinkedList\LinkedListArray.h">
+    <ClInclude Include="Include\DataStructures\LinkedList\LinkedListArray.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Containers\Stack.h">
+    <ClInclude Include="Include\DataStructures\Stack.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

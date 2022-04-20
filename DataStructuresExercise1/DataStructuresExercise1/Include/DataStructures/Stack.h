@@ -8,17 +8,11 @@ namespace containers
 	template<typename ElementType, typename UnderlyingContainer = LinkedListPointers<ElementType>>
 	class Stack : private UnderlyingContainer
 	{
-	private:
-		// Error Messages
-		static constexpr auto GET_TOP_WHEN_EMPTY = "Can't get the top of the stack when it's empty!";
-		static constexpr auto POP_WHEN_EMPTY = "Can't pop the stack when it's empty!";
-		static constexpr auto PUSH_FAILED = "Failed to push a new element to the stack!";
-
 	public:
 		// Constructors
 		Stack() = default;
-		Stack(const Stack& other) throw (const char*) = default;
-		Stack(Stack&& other) throw (const char*) = default;
+		Stack(const Stack& other) = default;
+		Stack(Stack&& other) = default;
 
 		// Destructor
 		~Stack() = default;
@@ -30,27 +24,33 @@ namespace containers
 		// Getters
 		inline auto Size() const { return UnderlyingContainer::Size(); }
 		inline auto IsEmpty() const { return UnderlyingContainer::IsEmpty(); }
-		inline auto Top() const throw (const char*) 
+		inline auto Top() const 
 		{
 			if (IsEmpty()) throw GET_TOP_WHEN_EMPTY;
 			return UnderlyingContainer::Last(); 
 		}
 
 		// Stack Manipulation
-		inline auto& Push(ElementType element) throw (const char*) 
+		inline auto& Push(ElementType element) 
 		{
 			try { return UnderlyingContainer::Append(std::move(element)); }
-			catch (const char* error) { throw PUSH_FAILED; }
+			catch (const char*) { throw PUSH_FAILED; }
 		}
 
-		inline auto Pop() throw (const char*) 
+		inline auto Pop() 
 		{
 			if (IsEmpty()) throw POP_WHEN_EMPTY;
 			auto temp = Top(); UnderlyingContainer::RemoveLast(); return temp; 
 		}
 
-		inline auto& MakeEmpty() { UnderlyingContainer::MakeEmpty(); }
-		inline auto& Clear() { UnderlyingContainer::Clear(); }
+		inline auto& MakeEmpty() { return UnderlyingContainer::MakeEmpty(); }
+		inline auto& Clear() { return UnderlyingContainer::Clear(); }
+
+	private:
+		// Error Messages
+		static constexpr auto GET_TOP_WHEN_EMPTY = "Can't get the top of the stack when it's empty!";
+		static constexpr auto POP_WHEN_EMPTY = "Can't pop the stack when it's empty!";
+		static constexpr auto PUSH_FAILED = "Failed to push a new element to the stack!";
 	};
 }
 
