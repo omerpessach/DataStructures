@@ -108,7 +108,7 @@ namespace iterative
         LinkedListArray<unsigned int> accessibleTowns(country.size());
         vector<Color> coloredTowns(country.size(), WHITE);
 
-        Stack<ItemType, LinkedListArray<ItemType>> stack;
+        Stack<ItemType> stack;
         stack.Push({ &accessibleTowns, 
                      &coloredTowns, 
                      country[townNumber].begin(),
