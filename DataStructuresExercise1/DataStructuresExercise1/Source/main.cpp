@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <math.h>
 #include "DataStructures/LinkedList/LinkedListPointers.h"
 #include "DataStructures/LinkedList/LinkedListArray.h"
 #include "DataStructures/Stack.h"
@@ -14,46 +15,27 @@ using Color = bool;
 constexpr auto WHITE = true;
 constexpr auto BLACK = false;
 
-void AssertTownNumber(size_t numberOfTowns, unsigned int townNumber)
+struct UserInput
 {
-    if (townNumber > numberOfTowns || townNumber == 0) throw "Invalid town number!";
-}
-
-auto GetCountryFromUser()
-{
-    unsigned int numberOfTowns;
-    unsigned int numberOfPairs;
-    string townConnectionsInput;
-
-    cout << "Please enter the number of towns, and the number of pairs (seperated with a space): ";
-    cin >> numberOfTowns >> numberOfPairs;
-    if (cin.fail()) throw "Invalid input!";
-    cin.ignore(1, '\n');
-
-    cout << "Please enter the town connections in pairs, in one line (seperated with a space):\n";
-    getline(cin, townConnectionsInput);
-    if (cin.fail()) throw "Invalid input!";
-
-    unsigned int numberOfPairsReceived = 0;
-
-    vector<LinkedListPointers<unsigned int>> country(numberOfTowns);
-
-    stringstream stream(townConnectionsInput);
-
-    unsigned int firstTownNumber;
-    while (stream >> firstTownNumber)
+    struct Pair
     {
-        AssertTownNumber(numberOfTowns, firstTownNumber);
+        unsigned int source;
+        unsigned int destination;
+    };
 
-        unsigned int secondTownNumber;
-        if (!(stream >> secondTownNumber)) throw "Invalid input, or you haven't entered an even number of towns!";
-        AssertTownNumber(numberOfTowns, secondTownNumber);
+    unsigned int numberOfTowns;
+    std::vector<Pair> pairs;
+    unsigned int source;
+};
 
-        country[firstTownNumber - 1].Append(secondTownNumber - 1);
-        ++numberOfPairsReceived;
+auto GetCountryFromUserInput(const UserInput& userInput)
+{
+    vector<LinkedListPointers<unsigned int>> country(userInput.numberOfTowns);
+
+    for (const auto& pair : userInput.pairs)
+    {
+        country[pair.source - 1].Append(pair.destination - 1);
     }
-
-    if (numberOfPairsReceived != numberOfPairs) throw "Invalid input, or you haven't entered the right amount of pairs!";
 
     return country;
 }
@@ -93,16 +75,16 @@ namespace iterative
             };
 
             // Local Variables
-            LinkedListArray<unsigned int>* accessibleTowns;
-            vector<Color>* coloredTowns;
+            LinkedListArray<unsigned int>* accessibleTowns = nullptr;
+            vector<Color>* coloredTowns = nullptr;
             LinkedListPointers<unsigned int>::LinkedNode neighborIterator;
 
             // Parameters
-            const vector<LinkedListPointers<unsigned int>>* country;
-            unsigned int townNumber;
+            const vector<LinkedListPointers<unsigned int>>* country = nullptr;
+            unsigned int townNumber = 0;
 
             // Line
-            Line line;
+            Line line = Line::START;
         };
 
         LinkedListArray<unsigned int> accessibleTowns(country.size());
@@ -164,29 +146,68 @@ void PrintAccessibleTowns(const LinkedListArray<unsigned int>& accessibleTowns)
     cout << "\n";
 }
 
+auto GetUserInput()
+{
+    // Get the number of towns and the number of pairs seperated by a space
+    int numberOfTowns;
+    int numberOfPairs;
+    cin >> numberOfTowns >> numberOfPairs;
+    bool wasInvalid = cin.fail() || numberOfTowns <= 0 || numberOfPairs < 0 || numberOfPairs > pow(numberOfTowns, numberOfTowns);
+    cin.ignore(1, '\n');
+
+    // Get the line of town connections
+    string townConnectionsInput;
+    getline(cin, townConnectionsInput);
+    wasInvalid = wasInvalid || cin.fail();
+
+    // Count the number of towns received
+    unsigned int numberOfTownsReceived = 0;
+    int townNumber;
+    stringstream stream(townConnectionsInput);
+    while (stream >> townNumber)
+    {
+        if (townNumber > numberOfTowns || townNumber <= 0)
+        {
+            wasInvalid = true;
+            break;
+        }
+
+        numberOfTownsReceived++;
+    }
+
+    wasInvalid = wasInvalid || numberOfTownsReceived % 2 != 0 || numberOfTownsReceived / 2 != numberOfPairs;
+
+    // Get the source town
+    int source;
+    cin >> source;
+
+    stream = stringstream(townConnectionsInput);
+
+    // The college wanted us to first receive all of the input and then check for validity, so we only check now.
+    if (wasInvalid || cin.fail() || source > numberOfTowns || source <= 0) throw "invalid input";
+
+    UserInput userInput = {static_cast<unsigned int>(numberOfTowns), std::vector<UserInput::Pair>(numberOfTownsReceived / 2), static_cast<unsigned int>(source)};
+    for (auto& pair : userInput.pairs) stream >> pair.source >> pair.destination;
+
+    return userInput;
+}
+
 int main()
 {
     try
     {
-        auto country = GetCountryFromUser();
+        auto userInput = GetUserInput();
+        auto country = GetCountryFromUserInput(userInput);
 
-        // Get the town number
-        unsigned int townToCheck;
-        cout << "Please enter the town number to find the accessible towns from it: ";
-        cin >> townToCheck;
-        if (cin.fail()) throw "Invalid input!";
-        AssertTownNumber(country.size(), townToCheck);
-        --townToCheck;
-
-        cout << "Accessible towns by recursion: ";
+        cout << "Cities accessible from source city " << userInput.source << " (recursive algorithm): ";
 
         LinkedListArray<unsigned int> accessibleTowns(country.size());
         vector<Color> coloredTowns(country.size(), WHITE);
-        recursive::GetToTown(country, townToCheck, coloredTowns, accessibleTowns);
+        recursive::GetToTown(country, userInput.source - 1, coloredTowns, accessibleTowns);
         PrintAccessibleTowns(accessibleTowns);
 
-        cout << "Accessible towns by iteration: ";
-        PrintAccessibleTowns(iterative::GetToTown(country, townToCheck));
+        cout << "Cities accessible from source city " << userInput.source << " (iterative algorithm): ";
+        PrintAccessibleTowns(iterative::GetToTown(country, userInput.source - 1));
     }
     catch (const char* errorMessage)
     {
